@@ -1,884 +1,134 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
-  <title>Chat Privata</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <!-- Matrix JS SDK -->
-  <script src="https://unpkg.com/matrix-js-sdk@latest/dist/browser-matrix.min.js"></script>
-  <style>
-    :root {
-      --bg: #0b0c10;
-      --fg: #e5e5e5;
-      --accent: #1f9cff;
-      --accent-soft: #143a5c;
-      --danger: #ff4b4b;
-      --muted: #777;
-      --bubble-me: #1f9cff;
-      --bubble-them: #222831;
-      --border-radius: 10px;
-      --font-main: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calcolatrice</title>
+<style>
     body {
-      margin: 0;
-      padding: 0;
-      background: radial-gradient(circle at top, #1b2838 0, #050608 55%, #000 100%);
-      color: var(--fg);
-      font-family: var(--font-main);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-    }
-
-    .app-shell {
-      width: 100%;
-      max-width: 420px;
-      background: rgba(5, 7, 12, 0.95);
-      border-radius: 18px;
-      box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .app-header {
-      padding: 10px 14px;
-      background: linear-gradient(135deg, #111827, #020617);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
-
-    .app-title {
-      font-size: 14px;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: #9ca3af;
-    }
-
-    .status-pill {
-      font-size: 11px;
-      padding: 3px 8px;
-      border-radius: 999px;
-      background: rgba(15, 118, 110, 0.15);
-      color: #6ee7b7;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .status-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 999px;
-      background: #22c55e;
-    }
-
-    .reset-btn {
-      font-size: 11px;
-      padding: 4px 8px;
-      border-radius: 999px;
-      border: 1px solid rgba(248, 113, 113, 0.6);
-      background: transparent;
-      color: #fecaca;
-      cursor: pointer;
-    }
-
-    .reset-btn:hover {
-      background: rgba(248, 113, 113, 0.1);
-    }
-
-    .screen {
-      display: none;
-      padding: 16px;
-      flex: 1;
-      overflow: hidden;
-    }
-
-    .screen.active {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .section-title {
-      font-size: 16px;
-      font-weight: 600;
-      margin-bottom: 8px;
-    }
-
-    .section-subtitle {
-      font-size: 12px;
-      color: var(--muted);
-      margin-bottom: 16px;
-    }
-
-    .field-group {
-      margin-bottom: 12px;
-    }
-
-    .field-label {
-      font-size: 12px;
-      margin-bottom: 4px;
-      color: #9ca3af;
-    }
-
-    .field-input {
-      width: 100%;
-      padding: 8px 10px;
-      border-radius: 8px;
-      border: 1px solid rgba(148, 163, 184, 0.5);
-      background: rgba(15, 23, 42, 0.9);
-      color: var(--fg);
-      font-size: 13px;
-    }
-
-    .field-input:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.4);
-    }
-
-    .primary-btn {
-      width: 100%;
-      padding: 10px;
-      border-radius: 10px;
-      border: none;
-      background: linear-gradient(135deg, #2563eb, #22c55e);
-      color: white;
-      font-weight: 600;
-      font-size: 14px;
-      cursor: pointer;
-      margin-top: 8px;
-    }
-
-    .primary-btn:disabled {
-      opacity: 0.5;
-      cursor: default;
-    }
-
-    .primary-btn:hover:not(:disabled) {
-      filter: brightness(1.05);
-    }
-
-    .small-note {
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 8px;
-    }
-
-    .error-text {
-      font-size: 12px;
-      color: #fecaca;
-      margin-top: 6px;
-    }
-
-    /* Calculator / PIN screen */
-    .calc-wrapper {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      flex: 1;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .calc-display {
-      width: 80%;
-      padding: 10px;
-      border-radius: 10px;
-      background: #020617;
-      border: 1px solid rgba(148, 163, 184, 0.5);
-      text-align: right;
-      font-size: 20px;
-      letter-spacing: 0.08em;
-    }
-
-    .calc-grid {
-      width: 80%;
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-    }
-
-    .calc-btn {
-      padding: 10px 0;
-      border-radius: 8px;
-      border: none;
-      background: #111827;
-      color: var(--fg);
-      font-size: 16px;
-      cursor: pointer;
-    }
-
-    .calc-btn.op {
-      background: #1f2937;
-      color: #93c5fd;
-    }
-
-    .calc-btn.pin {
-      background: #16a34a;
-      color: white;
-      font-weight: 600;
-    }
-
-    .calc-btn.clear {
-      background: #b91c1c;
-      color: white;
-    }
-
-    .calc-btn:active {
-      transform: scale(0.97);
-    }
-
-    .pin-hint {
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 4px;
-    }
-
-    /* Chat screen */
-    .chat-wrapper {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      gap: 8px;
-    }
-
-    .chat-header {
-      font-size: 13px;
-      color: #9ca3af;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .chat-room-label {
-      font-size: 11px;
-      padding: 2px 6px;
-      border-radius: 999px;
-      background: rgba(37, 99, 235, 0.15);
-      color: #bfdbfe;
-    }
-
-    .chat-log {
-      flex: 1;
-      border-radius: 12px;
-      background: radial-gradient(circle at top left, #020617, #020617 40%, #020617 100%);
-      border: 1px solid rgba(148, 163, 184, 0.4);
-      padding: 8px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .msg-row {
-      display: flex;
-      flex-direction: column;
-      max-width: 80%;
-    }
-
-    .msg-row.me {
-      align-self: flex-end;
-      align-items: flex-end;
-    }
-
-    .msg-row.them {
-      align-self: flex-start;
-      align-items: flex-start;
-    }
-
-    .msg-bubble {
-      padding: 6px 9px;
-      border-radius: 12px;
-      font-size: 13px;
-      line-height: 1.3;
-      word-wrap: break-word;
-      white-space: pre-wrap;
-    }
-
-    .msg-row.me .msg-bubble {
-      background: var(--bubble-me);
-      color: #e5f2ff;
-      border-bottom-right-radius: 2px;
-    }
-
-    .msg-row.them .msg-bubble {
-      background: var(--bubble-them);
-      color: #e5e7eb;
-      border-bottom-left-radius: 2px;
-    }
-
-    .msg-meta {
-      font-size: 10px;
-      color: #9ca3af;
-      margin-top: 2px;
-    }
-
-    .chat-input-row {
-      display: flex;
-      gap: 6px;
-      margin-top: 4px;
-    }
-
-    .chat-input {
-      flex: 1;
-      padding: 8px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(148, 163, 184, 0.6);
-      background: rgba(15, 23, 42, 0.9);
-      color: var(--fg);
-      font-size: 13px;
-    }
-
-    .chat-send-btn {
-      padding: 8px 12px;
-      border-radius: 999px;
-      border: none;
-      background: var(--accent);
-      color: white;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .chat-send-btn:disabled {
-      opacity: 0.5;
-      cursor: default;
-    }
-
-    .chat-send-btn:hover:not(:disabled) {
-      filter: brightness(1.05);
-    }
-
-    .chat-status {
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 2px;
-    }
-
-    .footer-note {
-      font-size: 10px;
-      color: #4b5563;
-      text-align: center;
-      padding: 4px 0 8px;
-    }
-
-    @media (max-width: 480px) {
-      .app-shell {
-        max-width: 100%;
+        background: #111;
+        color: #fff;
+        font-family: Arial, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
         height: 100vh;
-        border-radius: 0;
-      }
+        margin: 0;
     }
-  </style>
+
+    .calculator {
+        width: 260px;
+        background: #222;
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    }
+
+    #display {
+        width: 100%;
+        height: 50px;
+        background: #000;
+        color: #0f0;
+        font-size: 24px;
+        text-align: right;
+        padding: 10px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        box-sizing: border-box;
+        border: 2px solid #333;
+    }
+
+    .buttons {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+    }
+
+    button {
+        padding: 20px;
+        font-size: 18px;
+        border: none;
+        border-radius: 10px;
+        background: #333;
+        color: #fff;
+        cursor: pointer;
+    }
+
+    button:active {
+        background: #555;
+    }
+</style>
 </head>
 <body>
-  <div class="app-shell">
-    <div class="app-header">
-      <div>
-        <div class="app-title">PRIVATE MATRIX CHAT</div>
-        <div style="font-size:11px;color:#6b7280;">Calcolatrice &amp; stanza segreta</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:6px;">
-        <div class="status-pill" id="connectionStatus">
-          <span class="status-dot"></span>
-          <span id="connectionStatusText">Offline</span>
-        </div>
-        <button class="reset-btn" id="resetLoginBtn">Reset login</button>
-      </div>
+
+<div class="calculator">
+    <input type="text" id="display" disabled>
+    <div class="buttons">
+        <button onclick="press('7')">7</button>
+        <button onclick="press('8')">8</button>
+        <button onclick="press('9')">9</button>
+        <button onclick="press('/')">/</button>
+
+        <button onclick="press('4')">4</button>
+        <button onclick="press('5')">5</button>
+        <button onclick="press('6')">6</button>
+        <button onclick="press('*')">*</button>
+
+        <button onclick="press('1')">1</button>
+        <button onclick="press('2')">2</button>
+        <button onclick="press('3')">3</button>
+        <button onclick="press('-')">-</button>
+
+        <button onclick="press('0')">0</button>
+        <button onclick="press('.')">.</button>
+        <button onclick="clearDisplay()">C</button>
+        <button onclick="press('+')">+</button>
+
+        <button style="grid-column: span 4; background:#0a0;" onclick="calculate()">=</button>
     </div>
+</div>
 
-    <!-- Screen: First-time Matrix login -->
-    <div class="screen" id="loginScreen">
-      <div class="section-title">Configura l'accesso</div>
-      <div class="section-subtitle">
-        Inserisci le credenziali Matrix e l'ID della persona con cui vuoi chattare.
-        Verranno salvati solo il token e gli ID, non la password.
-      </div>
+<script>
+    const PIN = "1234";  // <-- QUI METTI IL TUO PIN SEGRETO
+    let input = "";
 
-      <div class="field-group">
-        <div class="field-label">Homeserver</div>
-        <input
-          id="homeserverInput"
-          class="field-input"
-          type="text"
-          value="https://matrix-client.matrix.org"
-        />
-        <div class="small-note">
-          Di default: <code>https://matrix-client.matrix.org</code> (matrix.org).
-        </div>
-      </div>
-
-      <div class="field-group">
-        <div class="field-label">Username Matrix</div>
-        <input
-          id="usernameInput"
-          class="field-input"
-          type="text"
-          placeholder="@nome:matrix.org"
-        />
-      </div>
-
-      <div class="field-group">
-        <div class="field-label">Password Matrix</div>
-        <input
-          id="passwordInput"
-          class="field-input"
-          type="password"
-          placeholder="••••••••"
-        />
-      </div>
-
-      <div class="field-group">
-        <div class="field-label">Con chi vuoi chattare?</div>
-        <input
-          id="targetUserInput"
-          class="field-input"
-          type="text"
-          placeholder="@altra_persona:matrix.org"
-        />
-        <div class="small-note">
-          Inserisci l'ID Matrix completo dell'altra persona.
-        </div>
-      </div>
-
-      <button class="primary-btn" id="loginBtn">Collega e salva</button>
-      <div class="error-text" id="loginError" style="display:none;"></div>
-      <div class="small-note">
-        Dopo il primo accesso, l'app userà il token salvato e non ti chiederà più nulla.
-      </div>
-    </div>
-
-    <!-- Screen: Calculator / PIN -->
-    <div class="screen" id="pinScreen">
-      <div class="section-title">Calcolatrice</div>
-      <div class="section-subtitle">
-        Usa la calcolatrice normalmente. Quando inserisci il PIN corretto, si aprirà la chat.
-      </div>
-
-      <div class="calc-wrapper">
-        <div class="calc-display" id="calcDisplay">0</div>
-        <div class="calc-grid">
-          <button class="calc-btn" data-key="7">7</button>
-          <button class="calc-btn" data-key="8">8</button>
-          <button class="calc-btn" data-key="9">9</button>
-          <button class="calc-btn op" data-key="/">÷</button>
-
-          <button class="calc-btn" data-key="4">4</button>
-          <button class="calc-btn" data-key="5">5</button>
-          <button class="calc-btn" data-key="6">6</button>
-          <button class="calc-btn op" data-key="*">×</button>
-
-          <button class="calc-btn" data-key="1">1</button>
-          <button class="calc-btn" data-key="2">2</button>
-          <button class="calc-btn" data-key="3">3</button>
-          <button class="calc-btn op" data-key="-">−</button>
-
-          <button class="calc-btn clear" data-key="C">C</button>
-          <button class="calc-btn" data-key="0">0</button>
-          <button class="calc-btn op" data-key="=">=</button>
-          <button class="calc-btn op" data-key="+">+</button>
-
-          <button class="calc-btn pin" style="grid-column: span 4;" id="pinUnlockBtn">
-            Sblocca chat
-          </button>
-        </div>
-        <div class="pin-hint">
-          Il PIN è verificato internamente. Puoi cambiarlo nel codice (variabile <code>SECRET_PIN</code>).
-        </div>
-      </div>
-    </div>
-
-    <!-- Screen: Chat -->
-    <div class="screen" id="chatScreen">
-      <div class="chat-wrapper">
-        <div class="chat-header">
-          <div>
-            <div>Chat privata</div>
-            <div class="chat-status" id="chatStatusText">Connessione in corso…</div>
-          </div>
-          <div class="chat-room-label" id="chatPartnerLabel">@partner</div>
-        </div>
-
-        <div class="chat-log" id="chatLog"></div>
-
-        <div class="chat-input-row">
-          <input
-            id="chatInput"
-            class="chat-input"
-            type="text"
-            placeholder="Scrivi un messaggio…"
-          />
-          <button id="chatSendBtn" class="chat-send-btn" disabled>Invia</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="footer-note">
-      Matrix-based · Nessun server personale · Cronologia persistente
-    </div>
-  </div>
-
-  <script>
-    // ==========================
-    // CONFIGURAZIONE BASE
-    // ==========================
-    const SECRET_PIN = "1234"; // Cambia qui il PIN segreto
-    const LS_KEYS = {
-      accessToken: "mx_access_token",
-      userId: "mx_user_id",
-      homeserver: "mx_homeserver",
-      targetUserId: "mx_target_user_id",
-      dmRoomId: "mx_dm_room_id"
-    };
-
-    let calcBuffer = "";
-    let matrixClient = null;
-    let currentRoomId = null;
-    let isClientReady = false;
-
-    const loginScreen = document.getElementById("loginScreen");
-    const pinScreen = document.getElementById("pinScreen");
-    const chatScreen = document.getElementById("chatScreen");
-
-    const loginBtn = document.getElementById("loginBtn");
-    const loginError = document.getElementById("loginError");
-    const homeserverInput = document.getElementById("homeserverInput");
-    const usernameInput = document.getElementById("usernameInput");
-    const passwordInput = document.getElementById("passwordInput");
-    const targetUserInput = document.getElementById("targetUserInput");
-
-    const resetLoginBtn = document.getElementById("resetLoginBtn");
-    const connectionStatus = document.getElementById("connectionStatus");
-    const connectionStatusText = document.getElementById("connectionStatusText");
-
-    const calcDisplay = document.getElementById("calcDisplay");
-    const pinUnlockBtn = document.getElementById("pinUnlockBtn");
-
-    const chatScreenEl = document.getElementById("chatScreen");
-    const chatLog = document.getElementById("chatLog");
-    const chatInput = document.getElementById("chatInput");
-    const chatSendBtn = document.getElementById("chatSendBtn");
-    const chatStatusText = document.getElementById("chatStatusText");
-    const chatPartnerLabel = document.getElementById("chatPartnerLabel");
-
-    // ==========================
-    // UTILS
-    // ==========================
-    function setScreen(screenId) {
-      [loginScreen, pinScreen, chatScreen].forEach((el) => {
-        el.classList.remove("active");
-      });
-      const el = document.getElementById(screenId);
-      if (el) el.classList.add("active");
+    function press(value) {
+        input += value;
+        document.getElementById("display").value = input;
     }
 
-    function setConnectionStatus(online, text) {
-      connectionStatusText.textContent = text || (online ? "Online" : "Offline");
-      if (online) {
-        connectionStatus.style.background = "rgba(22,163,74,0.15)";
-        connectionStatus.querySelector(".status-dot").style.background = "#22c55e";
-      } else {
-        connectionStatus.style.background = "rgba(148,163,184,0.15)";
-        connectionStatus.querySelector(".status-dot").style.background = "#9ca3af";
-      }
+    function clearDisplay() {
+        input = "";
+        document.getElementById("display").value = "";
     }
 
-    function saveToLocalStorage(key, value) {
-      localStorage.setItem(key, value);
-    }
+    function calculate() {
+        // Se il PIN è corretto → fullscreen + redirect
+        if (input === PIN) {
 
-    function getFromLocalStorage(key) {
-      return localStorage.getItem(key);
-    }
+            // Tentativo di fullscreen (se il browser lo permette)
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen().catch(() => {});
+            }
 
-    function clearLoginData() {
-      Object.values(LS_KEYS).forEach((k) => localStorage.removeItem(k));
-    }
+            // Piccolo delay per evitare glitch
+            setTimeout(() => {
+                window.location.href = "https://hydrogen.element.io";
+            }, 300);
 
-    function formatTime(ts) {
-      const d = new Date(ts);
-      return d.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
-    }
+            return;
+        }
 
-    function appendMessage(event, isMe) {
-      const row = document.createElement("div");
-      row.className = "msg-row " + (isMe ? "me" : "them");
-
-      const bubble = document.createElement("div");
-      bubble.className = "msg-bubble";
-      bubble.textContent = event.getContent().body || "";
-
-      const meta = document.createElement("div");
-      meta.className = "msg-meta";
-      meta.textContent = formatTime(event.getTs());
-
-      row.appendChild(bubble);
-      row.appendChild(meta);
-      chatLog.appendChild(row);
-      chatLog.scrollTop = chatLog.scrollHeight;
-    }
-
-    // ==========================
-    // CALCOLATRICE / PIN
-    // ==========================
-    function updateCalcDisplay() {
-      calcDisplay.textContent = calcBuffer || "0";
-    }
-
-    function handleCalcKey(key) {
-      if (key === "C") {
-        calcBuffer = "";
-      } else if (key === "=") {
+        // Altrimenti funziona come una normale calcolatrice
         try {
-          // Valutazione semplice, solo per estetica
-          // (non influisce sul PIN)
-          // eslint-disable-next-line no-eval
-          const result = eval(calcBuffer || "0");
-          calcBuffer = String(result);
-        } catch (e) {
-          calcBuffer = "";
+            input = eval(input).toString();
+            document.getElementById("display").value = input;
+        } catch {
+            document.getElementById("display").value = "Errore";
+            input = "";
         }
-      } else {
-        calcBuffer += key;
-      }
-      updateCalcDisplay();
     }
+</script>
 
-    document.querySelectorAll(".calc-btn[data-key]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const key = btn.getAttribute("data-key");
-        handleCalcKey(key);
-      });
-    });
-
-    pinUnlockBtn.addEventListener("click", () => {
-      // Controllo PIN molto semplice: se la stringa contiene il PIN
-      if (calcBuffer.includes(SECRET_PIN)) {
-        setScreen("chatScreen");
-      } else {
-        calcBuffer = "";
-        updateCalcDisplay();
-      }
-    });
-
-    // ==========================
-    // MATRIX: LOGIN E CLIENT
-    // ==========================
-    async function firstTimeLogin() {
-      loginError.style.display = "none";
-      loginError.textContent = "";
-
-      const homeserver = homeserverInput.value.trim() || "https://matrix-client.matrix.org";
-      const username = usernameInput.value.trim();
-      const password = passwordInput.value;
-      const targetUserId = targetUserInput.value.trim();
-
-      if (!username || !password || !targetUserId) {
-        loginError.textContent = "Compila tutti i campi.";
-        loginError.style.display = "block";
-        return;
-      }
-
-      loginBtn.disabled = true;
-      loginBtn.textContent = "Connessione in corso…";
-
-      try {
-        const client = matrixcs.createClient({ baseUrl: homeserver });
-
-        const loginRes = await client.login("m.login.password", {
-          user: username,
-          password: password
-        });
-
-        const accessToken = loginRes.access_token;
-        const userId = loginRes.user_id;
-
-        saveToLocalStorage(LS_KEYS.accessToken, accessToken);
-        saveToLocalStorage(LS_KEYS.userId, userId);
-        saveToLocalStorage(LS_KEYS.homeserver, homeserver);
-        saveToLocalStorage(LS_KEYS.targetUserId, targetUserId);
-
-        // Non salviamo la password
-        passwordInput.value = "";
-
-        await initMatrixClient(accessToken, userId, homeserver, targetUserId);
-        setScreen("pinScreen");
-      } catch (err) {
-        console.error(err);
-        loginError.textContent = "Errore di login. Controlla credenziali e server.";
-        loginError.style.display = "block";
-      } finally {
-        loginBtn.disabled = false;
-        loginBtn.textContent = "Collega e salva";
-      }
-    }
-
-    async function initMatrixClient(accessToken, userId, homeserver, targetUserId) {
-      setConnectionStatus(false, "Connessione…");
-      chatStatusText.textContent = "Connessione a Matrix…";
-      chatPartnerLabel.textContent = targetUserId || "@partner";
-
-      matrixClient = matrixcs.createClient({
-        baseUrl: homeserver,
-        accessToken: accessToken,
-        userId: userId
-      });
-
-      matrixClient.on("sync", (state) => {
-        if (state === "PREPARED") {
-          isClientReady = true;
-          setConnectionStatus(true, "Online");
-          chatStatusText.textContent = "Connesso come " + userId;
-          ensureDirectRoom(targetUserId);
-        }
-      });
-
-      matrixClient.on("Room.timeline", (event, room, toStartOfTimeline) => {
-        if (!currentRoomId || room.roomId !== currentRoomId) return;
-        if (event.getType() !== "m.room.message") return;
-        const sender = event.getSender();
-        const isMe = sender === userId;
-        appendMessage(event, isMe);
-      });
-
-      await matrixClient.startClient({ initialSyncLimit: 20 });
-    }
-
-    function findExistingDirectRoom(targetUserId) {
-      const rooms = matrixClient.getRooms();
-      for (const room of rooms) {
-        const members = room.getJoinedMembers().map((m) => m.userId);
-        if (members.includes(targetUserId) && members.includes(matrixClient.getUserId())) {
-          return room.roomId;
-        }
-      }
-      return null;
-    }
-
-    async function ensureDirectRoom(targetUserId) {
-      let roomId = getFromLocalStorage(LS_KEYS.dmRoomId);
-      if (roomId) {
-        currentRoomId = roomId;
-        loadInitialMessages(roomId);
-        return;
-      }
-
-      const existing = findExistingDirectRoom(targetUserId);
-      if (existing) {
-        currentRoomId = existing;
-        saveToLocalStorage(LS_KEYS.dmRoomId, existing);
-        loadInitialMessages(existing);
-        return;
-      }
-
-      try {
-        const res = await matrixClient.createRoom({
-          invite: [targetUserId],
-          is_direct: true
-        });
-        currentRoomId = res.room_id;
-        saveToLocalStorage(LS_KEYS.dmRoomId, res.room_id);
-        loadInitialMessages(res.room_id);
-      } catch (err) {
-        console.error("Errore creazione stanza diretta:", err);
-        chatStatusText.textContent = "Errore nella creazione della chat privata.";
-      }
-    }
-
-    function loadInitialMessages(roomId) {
-      const room = matrixClient.getRoom(roomId);
-      chatLog.innerHTML = "";
-      if (!room) {
-        chatStatusText.textContent = "Chat pronta. Invia un messaggio per iniziare.";
-        chatSendBtn.disabled = false;
-        return;
-      }
-      const timeline = room.getLiveTimeline().getEvents();
-      timeline.forEach((ev) => {
-        if (ev.getType() !== "m.room.message") return;
-        const isMe = ev.getSender() === matrixClient.getUserId();
-        appendMessage(ev, isMe);
-      });
-      chatStatusText.textContent = "Chat privata pronta.";
-      chatSendBtn.disabled = false;
-    }
-
-    async function sendChatMessage() {
-      const text = chatInput.value.trim();
-      if (!text || !matrixClient || !currentRoomId) return;
-      chatSendBtn.disabled = true;
-      try {
-        await matrixClient.sendEvent(currentRoomId, "m.room.message", {
-          msgtype: "m.text",
-          body: text
-        });
-        chatInput.value = "";
-      } catch (err) {
-        console.error("Errore invio messaggio:", err);
-      } finally {
-        chatSendBtn.disabled = false;
-      }
-    }
-
-    // ==========================
-    // EVENT LISTENERS
-    // ==========================
-    loginBtn.addEventListener("click", firstTimeLogin);
-
-    resetLoginBtn.addEventListener("click", () => {
-      if (confirm("Vuoi davvero resettare il login? Dovrai reinserire le credenziali Matrix.")) {
-        clearLoginData();
-        location.reload();
-      }
-    });
-
-    chatSendBtn.addEventListener("click", sendChatMessage);
-    chatInput.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        sendChatMessage();
-      }
-    });
-
-    // ==========================
-    // BOOTSTRAP APP
-    // ==========================
-    (async function bootstrap() {
-      const accessToken = getFromLocalStorage(LS_KEYS.accessToken);
-      const userId = getFromLocalStorage(LS_KEYS.userId);
-      const homeserver = getFromLocalStorage(LS_KEYS.homeserver);
-      const targetUserId = getFromLocalStorage(LS_KEYS.targetUserId);
-
-      if (!accessToken || !userId || !homeserver || !targetUserId) {
-        // Primo avvio: chiedi login
-        setScreen("loginScreen");
-        setConnectionStatus(false, "Non configurato");
-      } else {
-        // Già configurato: login automatico
-        setScreen("pinScreen");
-        setConnectionStatus(false, "Connessione…");
-        chatPartnerLabel.textContent = targetUserId;
-        try {
-          await initMatrixClient(accessToken, userId, homeserver, targetUserId);
-        } catch (err) {
-          console.error("Errore init client:", err);
-          setScreen("loginScreen");
-          setConnectionStatus(false, "Errore. Reimposta login.");
-        }
-      }
-    })();
-  </script>
 </body>
 </html>
