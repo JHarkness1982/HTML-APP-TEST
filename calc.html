@@ -6,49 +6,48 @@
 <title>Calcolatrice</title>
 <style>
     body {
-        background: #111;
-        color: #fff;
-        font-family: Arial, sans-serif;
+        background: #000;
+        margin: 0;
         display: flex;
         justify-content: center;
         align-items: center;
         height: 100vh;
-        margin: 0;
+        font-family: sans-serif;
     }
 
     .calculator {
-        width: 260px;
-        background: #222;
+        width: 300px;
+        background: #1c1c1c;
         padding: 20px;
-        border-radius: 15px;
-        box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        border-radius: 20px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.6);
     }
 
     #display {
         width: 100%;
-        height: 50px;
+        height: 60px;
         background: #000;
         color: #0f0;
-        font-size: 24px;
+        font-size: 32px;
         text-align: right;
         padding: 10px;
-        border-radius: 8px;
-        margin-bottom: 15px;
+        border-radius: 10px;
+        border: none;
+        margin-bottom: 20px;
         box-sizing: border-box;
-        border: 2px solid #333;
     }
 
     .buttons {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
-        gap: 10px;
+        gap: 12px;
     }
 
     button {
         padding: 20px;
-        font-size: 18px;
+        font-size: 22px;
         border: none;
-        border-radius: 10px;
+        border-radius: 12px;
         background: #333;
         color: #fff;
         cursor: pointer;
@@ -56,6 +55,11 @@
 
     button:active {
         background: #555;
+    }
+
+    .equal {
+        background: #0a0;
+        grid-column: span 4;
     }
 </style>
 </head>
@@ -77,19 +81,19 @@
         <button onclick="press('1')">1</button>
         <button onclick="press('2')">2</button>
         <button onclick="press('3')">3</button>
-        <button onclick="press('-')">-</button>
+        <button onclick="goFullscreen()">+</button>
 
         <button onclick="press('0')">0</button>
         <button onclick="press('.')">.</button>
         <button onclick="clearDisplay()">C</button>
-        <button onclick="press('+')">+</button>
+        <button onclick="press('-')">-</button>
 
-        <button style="grid-column: span 4; background:#0a0;" onclick="calculate()">=</button>
+        <button class="equal" onclick="calculate()">=</button>
     </div>
 </div>
 
 <script>
-    const PIN = "1234";  // <-- QUI METTI IL TUO PIN SEGRETO
+    const PIN = "1982";  // <-- QUI IL TUO PIN
     let input = "";
 
     function press(value) {
@@ -102,24 +106,20 @@
         document.getElementById("display").value = "";
     }
 
+    function goFullscreen() {
+        if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().catch(() => {});
+        }
+    }
+
     function calculate() {
-        // Se il PIN è corretto → fullscreen + redirect
         if (input === PIN) {
-
-            // Tentativo di fullscreen (se il browser lo permette)
-            if (document.documentElement.requestFullscreen) {
-                document.documentElement.requestFullscreen().catch(() => {});
-            }
-
-            // Piccolo delay per evitare glitch
             setTimeout(() => {
                 window.location.href = "https://hydrogen.element.io";
             }, 300);
-
             return;
         }
 
-        // Altrimenti funziona come una normale calcolatrice
         try {
             input = eval(input).toString();
             document.getElementById("display").value = input;
