@@ -21,8 +21,8 @@
     border-radius: 6px;
     font-size: 14px;
     font-family: sans-serif;
-    z-index: 9999;          /* 🔥 SEMPRE SOPRA LA MAPPA */
-    pointer-events: none;   /* 🔥 NON BLOCCA LO ZOOM/PAN */
+    z-index: 9999;          /* Sempre sopra la mappa */
+    pointer-events: none;   /* Non blocca zoom/pan */
   }
 </style>
 </head>
@@ -36,8 +36,10 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-const ENDPOINT = "https://script.google.com/macros/s/AKfycbyYT7RYhyof1kSyiO_aSlMcQYAHoQ7Wo8l-Ybr8b1dn_YR1JI7j3ZzgBnYeZYjzTujNeg/exec";
+/* 🔥 NUOVO ENDPOINT SHEETDB */
+const ENDPOINT = "https://sheetdb.io/api/v1/0a2wy7lgvckyt";
 
+/* Mappa iniziale */
 let map = L.map('map').setView([44.0, 10.0], 13);
 let marker = L.marker([44.0, 10.0]).addTo(map);
 
@@ -45,10 +47,15 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19
 }).addTo(map);
 
+/* Funzione di aggiornamento */
 async function update() {
   try {
     const res = await fetch(ENDPOINT);
-    const data = await res.json();
+    const arr = await res.json();
+
+    if (!arr || !arr[0]) return;
+
+    const data = arr[0];
 
     if (!data.lat || !data.lon) return;
 
@@ -58,7 +65,8 @@ async function update() {
     marker.setLatLng([lat, lon]);
     map.setView([lat, lon]);
 
-    const d = new Date(data.timestamp);
+    /* Timestamp */
+    const d = new Date(parseInt(data.timestamp));
     const formatted = d.toLocaleString("it-IT", {
       day: "2-digit",
       month: "2-digit",
@@ -75,9 +83,12 @@ async function update() {
   }
 }
 
+/* Aggiorna subito e poi ogni 3 secondi */
 update();
 setInterval(update, 3000);
 </script>
 
 </body>
 </html>
+
+
