@@ -81,16 +81,15 @@ document.getElementById("start").onclick = () => {
 
       fetch(ENDPOINT, {
         method: "POST",
-        headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({
-          lat: lat,
-          lon: lon,
-          timestamp: Date.now()
-        })
+        headers: {"Content-Type": "application/x-www-form-urlencoded"},
+        body: "lat=" + encodeURIComponent(lat) +
+              "&lon=" + encodeURIComponent(lon) +
+              "&timestamp=" + encodeURIComponent(Date.now())
       })
       .then(r => r.text())
       .then(t => log("✅ Risposta endpoint: " + t))
       .catch(e => log("❌ Errore invio dati: " + e));
+
     },
 
     err => {
@@ -109,5 +108,6 @@ document.getElementById("start").onclick = () => {
 
 </body>
 </html>
+
 
 
