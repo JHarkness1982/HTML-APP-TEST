@@ -34,7 +34,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-/* 🔥 NUOVO ENDPOINT GOOGLE APPS SCRIPT */
+/* 🔥 ENDPOINT GOOGLE APPS SCRIPT */
 const ENDPOINT = "https://script.google.com/macros/s/AKfycbx9aK4oyA1Qyu9Ql4HNCV3TQP8r0OAbxn0_ZP4B6cC8oOpT0uJ4yxJph6d3MWgZBxyR/exec";
 
 /* Mappa iniziale */
@@ -49,7 +49,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 async function update() {
   try {
     const res = await fetch(ENDPOINT);
-    const data = await res.json();   // 🔥 NON è più un array
+    const data = await res.json();
 
     if (!data.lat || !data.lon) return;
 
@@ -59,8 +59,8 @@ async function update() {
 
     if (isNaN(lat) || isNaN(lon)) return;
 
+    /* Aggiorna solo il marker, NON lo zoom */
     marker.setLatLng([lat, lon]);
-    map.setView([lat, lon], 17);
 
     /* Timestamp */
     const d = new Date(parseInt(data.timestamp));
@@ -87,3 +87,4 @@ setInterval(update, 3000);
 
 </body>
 </html>
+
