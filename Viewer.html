@@ -21,8 +21,8 @@
     border-radius: 6px;
     font-size: 14px;
     font-family: sans-serif;
-    z-index: 9999;          /* Sempre sopra la mappa */
-    pointer-events: none;   /* Non blocca zoom/pan */
+    z-index: 9999;
+    pointer-events: none;
   }
 </style>
 </head>
@@ -36,7 +36,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-/* 🔥 ENDPOINT SHEETDB: restituisce SOLO l’ultima riga */
+/* 🔥 ENDPOINT SHEETDB: solo ultima riga */
 const ENDPOINT = "https://sheetdb.io/api/v1/0a2wy7lgvckyt?sort_by=timestamp&sort_order=desc&limit=1";
 
 /* Mappa iniziale */
@@ -59,11 +59,14 @@ async function update() {
 
     if (!data.lat || !data.lon) return;
 
-    const lat = parseFloat(data.lat);
-    const lon = parseFloat(data.lon);
+    /* 🔥 FIX: converte virgola → punto */
+    const lat = parseFloat(data.lat.toString().trim().replace(",", "."));
+    const lon = parseFloat(data.lon.toString().trim().replace(",", "."));
+
+    if (isNaN(lat) || isNaN(lon)) return;
 
     marker.setLatLng([lat, lon]);
-    map.setView([lat, lon]);
+    map.setView([lat, lon], 17);  // zoom più preciso
 
     /* Timestamp */
     const d = new Date(parseInt(data.timestamp));
