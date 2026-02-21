@@ -45,6 +45,9 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   maxZoom: 19
 }).addTo(map);
 
+/* Variabile per centrare la mappa solo al primo aggiornamento */
+let firstUpdate = true;
+
 /* Funzione di aggiornamento */
 async function update() {
   try {
@@ -59,8 +62,17 @@ async function update() {
 
     if (isNaN(lat) || isNaN(lon)) return;
 
-    /* Aggiorna solo il marker, NON lo zoom */
+    /* Aggiorna il marker */
     marker.setLatLng([lat, lon]);
+
+    /* Centra la mappa SOLO al primo aggiornamento, con 2 secondi di ritardo */
+    if (firstUpdate) {
+      firstUpdate = false;
+      setTimeout(() => {
+        const currentZoom = map.getZoom();
+        map.setView([lat, lon], currentZoom);
+      }, 2000);
+    }
 
     /* Timestamp */
     const d = new Date(parseInt(data.timestamp));
@@ -87,4 +99,8 @@ setInterval(update, 3000);
 
 </body>
 </html>
+
+</body>
+</html>
+
 
