@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tracker Posizione</title>
+
+<style>
+  body {
+    font-family: sans-serif;
+    padding: 20px;
+    background: #f5f5f5;
+  }
+
+  h2 {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  #start {
+    width: 100%;
+    padding: 20px;
+    font-size: 20px;
+    font-weight: bold;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+  }
+
+  #start:active {
+    background: #005fcc;
+  }
+
+  #log {
+    margin-top: 25px;
+    padding: 15px;
+    background: #fff;
+    border-radius: 10px;
+    min-height: 200px;
+    white-space: pre-wrap;
+    font-size: 15px;
+    border: 1px solid #ccc;
+  }
+</style>
+</head>
+
+<body>
+
+<h2>Tracker Posizione</h2>
+
+<button id="start">📍 Attiva Localizzazione</button>
+
+<pre id="log"></pre>
+
+<script>
+const ENDPOINT = "https://script.google.com/macros/s/AKfycbyYT7RYhyof1kSyiO_aSlMcQYAHoQ7Wo8l-Ybr8b1dn_YR1JI7j3ZzgBnYeZYjzTujNeg/exec";
+
+function log(msg) {
+  document.getElementById("log").textContent += msg + "\n";
+}
+
+document.getElementById("start").onclick = () => {
+  log("▶️ Richiesta posizione avviata...");
+
+  if (!navigator.geolocation) {
+    log("❌ ERRORE: Geolocalizzazione non supportata dal browser.");
+    return;
+  }
+
+  navigator.geolocation.watchPosition(
+    pos => {
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+      const acc = pos.coords.accuracy;
+
+      log("📍 Posizione ottenuta:");
+      log("   Lat: " + lat);
+      log("   Lon: " + lon);
+      log("   Precisione: " + acc + " metri");
+
+      fetch(ENDPOINT, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          lat: lat,
+          lon: lon,
+          timestamp: Date.now()
+        })
+      })
+      .then(r => r.text())
+      .then(t => log("✅ Risposta endpoint: " + t))
+      .catch(e => log("❌ Errore invio dati: " + e));
+    },
+
+    err => {
+      log("❌ ERRORE geolocalizzazione:");
+      log("   " + err.message);
+    },
+
+    {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
+    }
+  );
+};
+</script>
+
+</body>
+</html>
