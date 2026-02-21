@@ -1,0 +1,18 @@
+<h3>Tracker posizione</h3>
+<button id="start">Attiva localizzazione</button>
+
+<script>
+document.getElementById("start").onclick = () => {
+  navigator.geolocation.watchPosition(pos => {
+    fetch("https://script.google.com/macros/s/AKfycbyYT7RYhyof1kSyiO_aSlMcQYAHoQ7Wo8l-Ybr8b1dn_YR1JI7j3ZzgBnYeZYjzTujNeg/exec", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        lat: pos.coords.latitude,
+        lon: pos.coords.longitude,
+        timestamp: Date.now()
+      })
+    });
+  });
+};
+</script>
