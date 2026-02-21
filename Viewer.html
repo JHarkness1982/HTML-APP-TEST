@@ -23,6 +23,29 @@
     z-index: 9999;
     pointer-events: none;
   }
+
+  /* Pulsante Trova Marcatore - GRANDE e in ALTO */
+  #centerBtn {
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #007bff;
+    color: white;
+    padding: 16px 26px;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: bold;
+    font-family: sans-serif;
+    cursor: pointer;
+    z-index: 9999;
+    border: none;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.35);
+  }
+
+  #centerBtn:active {
+    background: #005fcc;
+  }
 </style>
 </head>
 
@@ -30,6 +53,7 @@
 
 <div id="map"></div>
 <div id="timestamp">Ultimo aggiornamento: --</div>
+<button id="centerBtn">📍 Trova marcatore</button>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -47,6 +71,16 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 /* Variabile per centrare la mappa solo al primo aggiornamento */
 let firstUpdate = true;
+
+/* Funzione per centrare la mappa sul marker */
+function centerOnMarker() {
+  const pos = marker.getLatLng();
+  const currentZoom = map.getZoom();
+  map.setView(pos, currentZoom);
+}
+
+/* Pulsante Trova Marcatore */
+document.getElementById("centerBtn").onclick = centerOnMarker;
 
 /* Funzione di aggiornamento */
 async function update() {
@@ -69,8 +103,7 @@ async function update() {
     if (firstUpdate) {
       firstUpdate = false;
       setTimeout(() => {
-        const currentZoom = map.getZoom();
-        map.setView([lat, lon], currentZoom);
+        centerOnMarker();
       }, 2000);
     }
 
@@ -100,7 +133,5 @@ setInterval(update, 3000);
 </body>
 </html>
 
-</body>
-</html>
 
 
