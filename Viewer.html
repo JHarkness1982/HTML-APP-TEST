@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+<style>
+  body, html { margin:0; padding:0; height:100%; }
+  #map { height:100%; width:100%; }
+
+  #timestamp {
+    position: fixed;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.6);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: sans-serif;
+  }
+</style>
+</head>
+
+<body>
+
+<div id="map"></div>
+<div id="timestamp">Ultimo aggiornamento: --</div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+const ENDPOINT = "https://script.google.com/macros/s/AKfycbyYT7RYhyof1kSyiO_aSlMcQYAHoQ7Wo8l-Ybr8b1dn_YR1JI7j3ZzgBnYeZYjzTujNeg/exec";
+
+let map = L.map('map').setView([44.0, 10.0], 13);
+let marker = L.marker([44.0, 10.0]).addTo(map);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom: 19
+}).addTo(map);
+
+async function update() {
+  try {
+    const res = await fetch(ENDPOINT);
+    const data = await res.json();
+
+    if (!data.lat || !data.lon) return;
+
+    const lat = parseFloat(data.lat);
+    const lon = parseFloat(data.lon);
+
+    marker.setLatLng([lat, lon]);
+    map.setView([lat, lon]);
+
+    const d = new Date(data.timestamp);
+    const formatted = d.toLocaleString("it-IT", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+
+    document.getElementById("timestamp").textContent =
+      "Ultimo aggiornamento " + formatted;
+
+  } catch (e) {
+    console.log("Errore:", e);
+  }
+}
+
+update();
+setInterval(update, 3000);
+</script>
+
+</body>
+</html>
