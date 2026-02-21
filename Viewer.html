@@ -36,8 +36,8 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-/* 🔥 NUOVO ENDPOINT SHEETDB */
-const ENDPOINT = "https://sheetdb.io/api/v1/0a2wy7lgvckyt";
+/* 🔥 ENDPOINT SHEETDB: restituisce SOLO l’ultima riga */
+const ENDPOINT = "https://sheetdb.io/api/v1/0a2wy7lgvckyt?sort_by=timestamp&sort_order=desc&limit=1";
 
 /* Mappa iniziale */
 let map = L.map('map').setView([44.0, 10.0], 13);
@@ -90,5 +90,3 @@ setInterval(update, 3000);
 
 </body>
 </html>
-
-
