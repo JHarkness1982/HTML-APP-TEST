@@ -25,11 +25,9 @@
     .fc-daygrid-day.few { background-color: #f7f3c5 !important; }
     .fc-daygrid-day.many { background-color: #f7d0c5 !important; }
 
-    /* Rende gli eventi (i numeri) invisibili al tocco */
+    /* Rende gli eventi NON cliccabili ma visibili */
     .fc-event {
       pointer-events: none !important;
-      background: transparent !important;
-      border: none !important;
     }
 
     .fc-event-title {
@@ -94,12 +92,11 @@
             classNames: count === 1 ? "available" : count <= 3 ? "few" : "many"
           });
 
-          /* Numero dei disponibili (non cliccabile) */
+          /* Numero dei disponibili (visibile ma non cliccabile) */
           calendar.addEvent({
             start: dateStr,
             title: String(count),
-            allDay: true,
-            interactive: false
+            allDay: true
           });
         });
       });
