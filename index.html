@@ -15,29 +15,28 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
   <style>
-    body { 
-      font-family: sans-serif; 
-      padding: 10px; 
+    body { font-family: sans-serif; padding: 10px; }
+    #calendar { max-width: 100%; margin: 20px auto; }
+
+    .fc-daygrid-day-number { font-size: 0.9rem; }
+
+    /* Colorazioni background */
+    .fc-daygrid-day.available { background-color: #c8f7c5 !important; }
+    .fc-daygrid-day.few { background-color: #f7f3c5 !important; }
+    .fc-daygrid-day.many { background-color: #f7d0c5 !important; }
+
+    /* Rende gli eventi (i numeri) invisibili al tocco */
+    .fc-event {
+      pointer-events: none !important;
+      background: transparent !important;
+      border: none !important;
     }
 
-    #calendar { 
-      max-width: 100%; 
-      margin: 20px auto; 
-    }
-
-    .fc-daygrid-day-number {
-      font-size: 0.9rem;
-    }
-
-    /* Colorazioni disponibilità */
-    .fc-daygrid-day.available {
-      background-color: #c8f7c5 !important;
-    }
-    .fc-daygrid-day.few {
-      background-color: #f7f3c5 !important;
-    }
-    .fc-daygrid-day.many {
-      background-color: #f7d0c5 !important;
+    .fc-event-title {
+      font-size: 1rem;
+      font-weight: bold;
+      text-align: center;
+      width: 100%;
     }
   </style>
 </head>
@@ -70,20 +69,14 @@
       localStorage.setItem("nickname", nickname);
     }
 
-    /* TOGGLE DISPONIBILITÀ (solo quando l’utente conferma) */
+    /* TOGGLE DISPONIBILITÀ */
     function toggleDisponibilita(dateStr, currentlyAvailable) {
       const ref = db.ref("disponibilita/" + dateStr + "/" + nickname);
-
-      if (currentlyAvailable) {
-        // era disponibile, lo rimuoviamo
-        ref.remove();
-      } else {
-        // non era disponibile, lo aggiungiamo
-        ref.set(true);
-      }
+      if (currentlyAvailable) ref.remove();
+      else ref.set(true);
     }
 
-    /* AGGIORNA COLORI */
+    /* AGGIORNA COLORI + NUMERI */
     function aggiornaColori(calendar) {
       db.ref("disponibilita").on("value", snapshot => {
         const data = snapshot.val() || {};
@@ -94,10 +87,19 @@
           const persone = Object.keys(data[dateStr] || {});
           const count = persone.length;
 
+          /* Background color */
           calendar.addEvent({
             start: dateStr,
             display: "background",
             classNames: count === 1 ? "available" : count <= 3 ? "few" : "many"
+          });
+
+          /* Numero dei disponibili (non cliccabile) */
+          calendar.addEvent({
+            start: dateStr,
+            title: String(count),
+            allDay: true,
+            interactive: false
           });
         });
       });
@@ -137,11 +139,7 @@
               statoMio + "\n\n" +
               "Vuoi cambiare il tuo stato di disponibilità per questo giorno?";
 
-            const conferma = confirm(msg);
-
-            if (conferma) {
-              toggleDisponibilita(dateStr, ioDisponibile);
-            }
+            if (confirm(msg)) toggleDisponibilita(dateStr, ioDisponibile);
           });
         }
       });
