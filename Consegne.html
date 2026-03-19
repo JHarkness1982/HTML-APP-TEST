@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manutenzione Digitali</title>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+  <style>
+    :root {
+      --bg: #121212;
+      --bg-elevated: #1e1e1e;
+      --bg-editor: #222222;
+      --text: #f0f0f0;
+      --muted: #aaaaaa;
+      --accent: #4caf50;
+      --accent-soft: #2e7d32;
+      --border: #333333;
+    }
+
+    .light {
+      --bg: #ffffff;
+      --bg-elevated: #f5f5f5;
+      --bg-editor: #ffffff;
+      --text: #222222;
+      --muted: #777777;
+      --accent: #1976d2;
+      --accent-soft: #1565c0;
+      --border: #dddddd;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+    }
+
+    .app {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      background-color: var(--bg-elevated);
+    }
+
+    header h1 {
+      font-size: 1.1rem;
+      margin: 0;
+    }
+
+    .header-right {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    button {
+      cursor: pointer;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background-color: var(--bg-elevated);
+      color: var(--text);
+      padding: 6px 10px;
+      font-size: 0.9rem;
+    }
+
+    button:hover {
+      background-color: var(--accent-soft);
+      border-color: var(--accent);
+    }
+
+    .container {
+      flex: 1;
+      display: flex;
+      padding: 10px;
+      gap: 10px;
+    }
+
+    .sidebar {
+      width: 260px;
+      background-color: var(--bg-elevated);
+      border-radius: 6px;
+      padding: 10px;
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .main {
+      flex: 1;
+      background-color: var(--bg-elevated);
+      border-radius: 6px;
+      padding: 10px;
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .calendar-header span {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 2px;
+      font-size: 0.75rem;
+    }
+
+    .calendar-day-name {
+      text-align: center;
+      padding: 4px 0;
+      color: var(--muted);
+    }
+
+    .calendar-cell {
+      text-align: center;
+      padding: 4px 0;
+      border-radius: 4px;
+      cursor: pointer;
+      min-height: 24px;
+    }
+
+    .calendar-cell.other-month {
+      color: var(--muted);
+      opacity: 0.6;
+    }
+
+    .calendar-cell.today {
+      border: 1px solid var(--accent);
+    }
+
+    .calendar-cell.selected {
+      background-color: var(--accent-soft);
+    }
+
+    .calendar-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+
+    .calendar-actions button {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .editor-label {
+      font-size: 0.9rem;
+      margin-bottom: 4px;
+      color: var(--muted);
+    }
+
+    .editor-date {
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    textarea {
+      flex: 1;
+      width: 100%;
+      resize: none;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background-color: var(--bg-editor);
+      color: var(--text);
+      padding: 8px;
+      font-size: 0.9rem;
+      font-family: inherit;
+    }
+
+    .status-bar {
+      margin-top: 6px;
+      font-size: 0.8rem;
+      color: var(--muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 4px;
+      display: inline-block;
+    }
+
+    .status-saving .status-dot {
+      background-color: #ffa000;
+    }
+
+    .status-saved .status-dot {
+      background-color: #4caf50;
+    }
+
+    .status-idle .status-dot {
+      background-color: var(--muted);
+    }
+
+    /* Login overlay */
+    .login-overlay {
+      position: fixed;
+      inset: 0;
+      background-color: rgba(0,0,0,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+
+    .login-box {
+      background-color: var(--bg-elevated);
+      border-radius: 8px;
+      padding: 16px 18px;
+      width: 100%;
+      max-width: 320px;
+      border: 1px solid var(--border);
+    }
+
+    .login-box h2 {
+      margin: 0 0 10px;
+      font-size: 1rem;
+    }
+
+    .login-box p {
+      margin: 0 0 10px;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    .login-box input[type="password"] {
+      width: 100%;
+      padding: 8px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background-color: var(--bg-editor);
+      color: var(--text);
+      margin-bottom: 10px;
+      font-size: 0.9rem;
+    }
+
+    .login-error {
+      color: #ff5252;
+      font-size: 0.8rem;
+      margin-bottom: 6px;
+      min-height: 1em;
+    }
+
+    @media (max-width: 700px) {
+      .container {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="app" id="appRoot">
+
+  <header>
+    <h1>Manutenzione Digitali</h1>
+    <div class="header-right">
+      <span id="currentUserLabel" style="font-size:0.8rem;color:var(--muted);"></span>
+      <button id="themeToggleBtn">🌓 Tema</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <aside class="sidebar">
+      <div class="calendar-header">
+        <button id="prevMonthBtn">&lt;</button>
+        <span id="monthLabel"></span>
+        <button id="nextMonthBtn">&gt;</button>
+      </div>
+      <div class="calendar-grid" id="calendarGrid">
+        <!-- Giorni -->
+      </div>
+      <div class="calendar-actions">
+        <button id="todayBtn">Oggi</button>
+        <button id="gotoDateBtn">Vai a data</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="editor-label">Nota del giorno</div>
+      <div class="editor-date" id="editorDateLabel"></div>
+      <textarea id="editor" placeholder="Scrivi qui le consegne del giorno..."></textarea>
+      <div class="status-bar">
+        <div id="statusText">
+          <span class="status-dot"></span>
+          <span>In attesa</span>
+        </div>
+        <div id="lastSavedText"></div>
+      </div>
+    </main>
+  </div>
+
+<!-- Login -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <h2>Accesso Datario</h2>
+    <p>Inserisci la password condivisa per sbloccare le note.</p>
+    <div class="login-error" id="loginError"></div>
+    <input type="password" id="passwordInput" placeholder="Password">
+    <button id="loginBtn" style="width:100%;margin-top:4px;">Accedi</button>
+    <p style="margin-top:10px;font-size:0.75rem;">
+      Se è la prima volta che usi il datario e non esiste ancora una password,
+      la prima che inserisci verrà impostata come password principale.
+    </p>
+  </div>
+</div>
+
+</div>
+
+<!-- Firebase v8 compat (funziona in HTML locale) -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+<script>
+  /* =========================
+       CONFIGURAZIONE FIREBASE
+     ========================= */
+  const firebaseConfig = {
+    apiKey: "AIzaSyAyvpM4iFg8a8WErUbsAXp9DFwdaknpZ9I",
+    authDomain: "datario-217e5.firebaseapp.com",
+    databaseURL: "https://datario-217e5-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "datario-217e5",
+    storageBucket: "datario-217e5.firebasestorage.app",
+    messagingSenderId: "952135648992",
+    appId: "1:952135648992:web:f6369d0db7f75d55373285"
+  };
+
+  // Inizializzazione Firebase (v8 compat)
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+   // 🔥 Carica l'hash all'avvio
+  loadPasswordHash();
+</script>
+
+  /* =========================
+     UTILITÀ
+     ========================= */
+
+  function formatDateKey(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }
+
+  function formatDateLabel(date) {
+    return date.toLocaleDateString("it-IT", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric"
+    });
+  }
+
+  async function sha256(str) {
+    const enc = new TextEncoder();
+    const data = enc.encode(str);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+  }
+
+  /* =========================
+     STATO APP
+     ========================= */
+
+  let currentDate = new Date();
+  let selectedDate = new Date();
+  let currentTheme = localStorage.getItem("datarioTheme") || "dark";
+  let passwordHashFromDb = null;
+  let isAuthenticated = false;
+  let autosaveTimer = null;
+  let isSaving = false;
+  let lastSaved = null;
+
+  const appRoot = document.getElementById("appRoot");
+  const monthLabel = document.getElementById("monthLabel");
+  const calendarGrid = document.getElementById("calendarGrid");
+  const editor = document.getElementById("editor");
+  const editorDateLabel = document.getElementById("editorDateLabel");
+  const statusText = document.getElementById("statusText");
+  const lastSavedText = document.getElementById("lastSavedText");
+  const loginOverlay = document.getElementById("loginOverlay");
+  const loginError = document.getElementById("loginError");
+  const passwordInput = document.getElementById("passwordInput");
+  const currentUserLabel = document.getElementById("currentUserLabel");
+
+  /* =========================
+     TEMA
+     ========================= */
+
+  function applyTheme() {
+    if (currentTheme === "light") {
+      appRoot.classList.add("light");
+    } else {
+      appRoot.classList.remove("light");
+    }
+  }
+
+  document.getElementById("themeToggleBtn").addEventListener("click", () => {
+    currentTheme = currentTheme === "dark" ? "light" : "dark";
+    localStorage.setItem("datarioTheme", currentTheme);
+    applyTheme();
+  });
+
+  applyTheme();
+
+  /* =========================
+     LOGIN / PASSWORD
+     ========================= */
+
+  async function loadPasswordHash() {
+  const snap = await db.ref("datario/passwordHash").once("value");
+  passwordHashFromDb = snap.val() || null;
+
+  console.log("DEBUG → passwordHashFromDb:", passwordHashFromDb);
+}
+
+async function handleLogin() {
+  const pwd = passwordInput.value.trim();
+  if (!pwd) {
+    loginError.textContent = "Inserisci una password.";
+    return;
+  }
+
+  const hash = await sha256(pwd);
+  console.log("DEBUG → hash inserito:", hash);
+
+  console.log("DEBUG → confronto:", hash, "vs", passwordHashFromDb);
+
+  if (!passwordHashFromDb) {
+    await db.ref("datario/passwordHash").set(hash);
+    passwordHashFromDb = hash;
+    isAuthenticated = true;
+    loginOverlay.style.display = "none";
+    currentUserLabel.textContent = "Accesso con password impostata";
+    initAfterLogin();
+    return;
+  }
+
+  if (hash === passwordHashFromDb) {
+    isAuthenticated = true;
+    loginOverlay.style.display = "none";
+    currentUserLabel.textContent = "Accesso autorizzato";
+    initAfterLogin();
+  } else {
+    loginError.textContent = "Password errata.";
+  }
+}
+
+  document.getElementById("loginBtn").addEventListener("click", handleLogin);
+  passwordInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") handleLogin();
+  });
+
+  /* =========================
+     CALENDARIO
+     ========================= */
+
+  const dayNames = ["L", "M", "M", "G", "V", "S", "D"];
+
+  function buildCalendar() {
+    calendarGrid.innerHTML = "";
+
+    dayNames.forEach(d => {
+      const div = document.createElement("div");
+      div.textContent = d;
+      div.className = "calendar-day-name";
+      calendarGrid.appendChild(div);
+    });
+
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+
+    const firstDay = new Date(year, month, 1);
+    const startDay = (firstDay.getDay() + 6) % 7; // Lunedì=0
+
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+    const totalCells = 42; // 6 settimane
+
+    const todayKey = formatDateKey(new Date());
+    const selectedKey = formatDateKey(selectedDate);
+
+    for (let i = 0; i < totalCells; i++) {
+      const cell = document.createElement("div");
+      cell.className = "calendar-cell";
+
+      let dayNum;
+      let cellDate;
+      if (i < startDay) {
+        dayNum = daysInPrevMonth - (startDay - 1 - i);
+        cell.classList.add("other-month");
+        cellDate = new Date(year, month - 1, dayNum);
+      } else if (i >= startDay + daysInMonth) {
+        dayNum = i - (startDay + daysInMonth) + 1;
+        cell.classList.add("other-month");
+        cellDate = new Date(year, month + 1, dayNum);
+      } else {
+        dayNum = i - startDay + 1;
+        cellDate = new Date(year, month, dayNum);
+      }
+
+      const cellKey = formatDateKey(cellDate);
+      cell.textContent = dayNum;
+
+      if (cellKey === todayKey) {
+        cell.classList.add("today");
+      }
+      if (cellKey === selectedKey) {
+        cell.classList.add("selected");
+      }
+
+      cell.addEventListener("click", () => {
+        selectedDate = cellDate;
+        updateEditorDateLabel();
+        loadEntryForSelectedDate();
+        buildCalendar();
+      });
+
+      calendarGrid.appendChild(cell);
+    }
+
+    monthLabel.textContent = currentDate.toLocaleDateString("it-IT", {
+      month: "long",
+      year: "numeric"
+    });
+  }
+
+  document.getElementById("prevMonthBtn").addEventListener("click", () => {
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    buildCalendar();
+  });
+
+  document.getElementById("nextMonthBtn").addEventListener("click", () => {
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    buildCalendar();
+  });
+
+  document.getElementById("todayBtn").addEventListener("click", () => {
+    const now = new Date();
+    currentDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    selectedDate = now;
+    updateEditorDateLabel();
+    loadEntryForSelectedDate();
+    buildCalendar();
+  });
+
+  document.getElementById("gotoDateBtn").addEventListener("click", () => {
+    const input = prompt("Inserisci una data (YYYY-MM-DD):");
+    if (!input) return;
+    const parts = input.split("-");
+    if (parts.length !== 3) return;
+    const y = parseInt(parts[0], 10);
+    const m = parseInt(parts[1], 10) - 1;
+    const d = parseInt(parts[2], 10);
+    const dt = new Date(y, m, d);
+    if (isNaN(dt.getTime())) return;
+    selectedDate = dt;
+    currentDate = new Date(y, m, 1);
+    updateEditorDateLabel();
+    loadEntryForSelectedDate();
+    buildCalendar();
+  });
+
+  /* =========================
+     EDITOR / AUTOSAVE
+     ========================= */
+
+  function setStatus(state, text) {
+    statusText.className = state === "saving" ? "status-saving"
+                        : state === "saved" ? "status-saved"
+                        : "status-idle";
+    const dot = statusText.querySelector(".status-dot");
+    const label = statusText.querySelector("span:nth-child(2)");
+    if (state === "saving") {
+      label.textContent = "Salvataggio in corso...";
+    } else if (state === "saved") {
+      label.textContent = text || "Salvato";
+    } else {
+      label.textContent = text || "In attesa";
+    }
+  }
+
+  function updateLastSaved() {
+    if (!lastSaved) {
+      lastSavedText.textContent = "";
+      return;
+    }
+    lastSavedText.textContent = "Ultimo salvataggio: " +
+      lastSaved.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  }
+
+  function updateEditorDateLabel() {
+    editorDateLabel.textContent = formatDateLabel(selectedDate);
+  }
+
+  function loadEntryForSelectedDate() {
+    const key = formatDateKey(selectedDate);
+    setStatus("idle", "Caricamento...");
+    db.ref("datario/entries/" + key).once("value").then(snap => {
+      const val = snap.val() || "";
+      editor.value = val;
+      setStatus("idle", "Pronto");
+      lastSaved = null;
+      updateLastSaved();
+    });
+  }
+
+  function scheduleAutosave() {
+    if (!isAuthenticated) return;
+    if (autosaveTimer) clearTimeout(autosaveTimer);
+    setStatus("idle", "Modifiche non salvate");
+    autosaveTimer = setTimeout(() => {
+      saveEntry();
+    }, 1000);
+  }
+
+  function saveEntry() {
+    if (!isAuthenticated) return;
+    const key = formatDateKey(selectedDate);
+    const text = editor.value;
+    isSaving = true;
+    setStatus("saving");
+    db.ref("datario/entries/" + key).set(text).then(() => {
+      isSaving = false;
+      lastSaved = new Date();
+      setStatus("saved");
+      updateLastSaved();
+    }).catch(() => {
+      isSaving = false;
+      setStatus("idle", "Errore di salvataggio");
+    });
+  }
+
+  editor.addEventListener("input", scheduleAutosave);
+
+  /* =========================
+     INIZIALIZZAZIONE
+     ========================= */
+
+  async function initAfterLogin() {
+    updateEditorDateLabel();
+    buildCalendar();
+    loadEntryForSelectedDate();
+  }
+
+  (async function init() {
+    await loadPasswordHash();
+    // Mostro overlay login finché non autenticato
+    loginOverlay.style.display = "flex";
+  })();
+</script>
+</body>
+</html>
