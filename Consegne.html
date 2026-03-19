@@ -5,10 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Manutenzione Digitali</title>
 
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-
   <style>
     :root {
       --bg: #121212;
@@ -282,410 +278,408 @@
     }
   </style>
 </head>
+
 <body>
-<div class="app" id="appRoot">
-
-  <header>
-    <h1>Manutenzione Digitali</h1>
-    <div class="header-right">
-      <span id="currentUserLabel" style="font-size:0.8rem;color:var(--muted);"></span>
-      <button id="themeToggleBtn">🌓 Tema</button>
-    </div>
-  </header>
-
-  <div class="container">
-    <aside class="sidebar">
-      <div class="calendar-header">
-        <button id="prevMonthBtn">&lt;</button>
-        <span id="monthLabel"></span>
-        <button id="nextMonthBtn">&gt;</button>
+  <div class="app" id="appRoot">
+    <header>
+      <h1>Manutenzione Digitali</h1>
+      <div class="header-right">
+        <span id="currentUserLabel" style="font-size:0.8rem;color:var(--muted);"></span>
+        <button id="themeToggleBtn">🌓 Tema</button>
       </div>
-      <div class="calendar-grid" id="calendarGrid">
-        <!-- Giorni -->
-      </div>
-      <div class="calendar-actions">
-        <button id="todayBtn">Oggi</button>
-        <button id="gotoDateBtn">Vai a data</button>
-      </div>
-    </aside>
+    </header>
 
-    <main class="main">
-      <div class="editor-label">Nota del giorno</div>
-      <div class="editor-date" id="editorDateLabel"></div>
-      <textarea id="editor" placeholder="Scrivi qui le consegne del giorno..."></textarea>
-      <div class="status-bar">
-        <div id="statusText">
-          <span class="status-dot"></span>
-          <span>In attesa</span>
+    <div class="container">
+      <aside class="sidebar">
+        <div class="calendar-header">
+          <button id="prevMonthBtn">&lt;</button>
+          <span id="monthLabel"></span>
+          <button id="nextMonthBtn">&gt;</button>
         </div>
-        <div id="lastSavedText"></div>
+        <div class="calendar-grid" id="calendarGrid">
+          <!-- Giorni -->
+        </div>
+        <div class="calendar-actions">
+          <button id="todayBtn">Oggi</button>
+          <button id="gotoDateBtn">Vai a data</button>
+        </div>
+      </aside>
+
+      <main class="main">
+        <div class="editor-label">Nota del giorno</div>
+        <div class="editor-date" id="editorDateLabel"></div>
+        <textarea id="editor" placeholder="Scrivi qui le consegne del giorno..."></textarea>
+        <div class="status-bar">
+          <div id="statusText">
+            <span class="status-dot"></span>
+            <span>In attesa</span>
+          </div>
+          <div id="lastSavedText"></div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Login -->
+    <div class="login-overlay" id="loginOverlay">
+      <div class="login-box">
+        <h2>Accesso Datario</h2>
+        <p>Inserisci la password condivisa per sbloccare le note.</p>
+        <div class="login-error" id="loginError"></div>
+        <input type="password" id="passwordInput" placeholder="Password">
+        <button id="loginBtn" style="width:100%;margin-top:4px;">Accedi</button>
+        <p style="margin-top:10px;font-size:0.75rem;">
+          Se è la prima volta che usi il datario e non esiste ancora una password,
+          la prima che inserisci verrà impostata come password principale.
+        </p>
       </div>
-    </main>
+    </div>
   </div>
 
-<!-- Login -->
-<div class="login-overlay" id="loginOverlay">
-  <div class="login-box">
-    <h2>Accesso Datario</h2>
-    <p>Inserisci la password condivisa per sbloccare le note.</p>
-    <div class="login-error" id="loginError"></div>
-    <input type="password" id="passwordInput" placeholder="Password">
-    <button id="loginBtn" style="width:100%;margin-top:4px;">Accedi</button>
-    <p style="margin-top:10px;font-size:0.75rem;">
-      Se è la prima volta che usi il datario e non esiste ancora una password,
-      la prima che inserisci verrà impostata come password principale.
-    </p>
-  </div>
-</div>
+  <!-- Firebase v8 compat (funziona in HTML locale) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
-</div>
-
-<!-- Firebase v8 compat (funziona in HTML locale) -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
-<script>
-  /* =========================
+  <script>
+    /* =========================
        CONFIGURAZIONE FIREBASE
-     ========================= */
-  const firebaseConfig = {
-    apiKey: "AIzaSyAyvpM4iFg8a8WErUbsAXp9DFwdaknpZ9I",
-    authDomain: "datario-217e5.firebaseapp.com",
-    databaseURL: "https://datario-217e5-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "datario-217e5",
-    storageBucket: "datario-217e5.firebasestorage.app",
-    messagingSenderId: "952135648992",
-    appId: "1:952135648992:web:f6369d0db7f75d55373285"
-  };
+       ========================= */
+    const firebaseConfig = {
+      apiKey: "AIzaSyAyvpM4iFg8a8WErUbsAXp9DFwdaknpZ9I",
+      authDomain: "datario-217e5.firebaseapp.com",
+      databaseURL: "https://datario-217e5-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "datario-217e5",
+      storageBucket: "datario-217e5.firebasestorage.app",
+      messagingSenderId: "952135648992",
+      appId: "1:952135648992:web:f6369d0db7f75d55373285"
+    };
 
-  // Inizializzazione Firebase (v8 compat)
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
-  
-</script>
+    // Inizializzazione Firebase (v8 compat)
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+  </script>
 
-  /* =========================
-     UTILITÀ
-     ========================= */
-
-  function formatDateKey(date) {
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2, "0");
-    const d = String(date.getDate()).padStart(2, "0");
-    return `${y}-${m}-${d}`;
-  }
-
-  function formatDateLabel(date) {
-    return date.toLocaleDateString("it-IT", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric"
-    });
-  }
-
-  async function sha256(str) {
-    const enc = new TextEncoder();
-    const data = enc.encode(str);
-    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
-  }
-
-  /* =========================
-     STATO APP
-     ========================= */
-
-  let currentDate = new Date();
-  let selectedDate = new Date();
-  let currentTheme = localStorage.getItem("datarioTheme") || "dark";
-  let passwordHashFromDb = null;
-  let isAuthenticated = false;
-  let autosaveTimer = null;
-  let isSaving = false;
-  let lastSaved = null;
-
-  const appRoot = document.getElementById("appRoot");
-  const monthLabel = document.getElementById("monthLabel");
-  const calendarGrid = document.getElementById("calendarGrid");
-  const editor = document.getElementById("editor");
-  const editorDateLabel = document.getElementById("editorDateLabel");
-  const statusText = document.getElementById("statusText");
-  const lastSavedText = document.getElementById("lastSavedText");
-  const loginOverlay = document.getElementById("loginOverlay");
-  const loginError = document.getElementById("loginError");
-  const passwordInput = document.getElementById("passwordInput");
-  const currentUserLabel = document.getElementById("currentUserLabel");
-
-  /* =========================
-     TEMA
-     ========================= */
-
-  function applyTheme() {
-    if (currentTheme === "light") {
-      appRoot.classList.add("light");
-    } else {
-      appRoot.classList.remove("light");
+  <script>
+    /* =========================
+       UTILITÀ
+       ========================= */
+    function formatDateKey(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
     }
-  }
 
-  document.getElementById("themeToggleBtn").addEventListener("click", () => {
-    currentTheme = currentTheme === "dark" ? "light" : "dark";
-    localStorage.setItem("datarioTheme", currentTheme);
-    applyTheme();
-  });
+    function formatDateLabel(date) {
+      return date.toLocaleDateString("it-IT", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+      });
+    }
 
-  applyTheme();
+    async function sha256(str) {
+      const enc = new TextEncoder();
+      const data = enc.encode(str);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+    }
 
-  /* =========================
-     LOGIN / PASSWORD
-     ========================= */
+    /* =========================
+       STATO APP
+       ========================= */
+    let currentDate = new Date();
+    let selectedDate = new Date();
+    let currentTheme = localStorage.getItem("datarioTheme") || "dark";
+    let passwordHashFromDb = null;
+    let isAuthenticated = false;
+    let autosaveTimer = null;
+    let isSaving = false;
+    let lastSaved = null;
 
-  async function loadPasswordHash() {
-  const snap = await db.ref("datario/passwordHash").once("value");
-  passwordHashFromDb = snap.val() || null;
+    const appRoot = document.getElementById("appRoot");
+    const monthLabel = document.getElementById("monthLabel");
+    const calendarGrid = document.getElementById("calendarGrid");
+    const editor = document.getElementById("editor");
+    const editorDateLabel = document.getElementById("editorDateLabel");
+    const statusText = document.getElementById("statusText");
+    const lastSavedText = document.getElementById("lastSavedText");
+    const loginOverlay = document.getElementById("loginOverlay");
+    const loginError = document.getElementById("loginError");
+    const passwordInput = document.getElementById("passwordInput");
+    const currentUserLabel = document.getElementById("currentUserLabel");
 
-  console.log("DEBUG → passwordHashFromDb:", passwordHashFromDb);
-}
+    /* =========================
+       TEMA
+       ========================= */
+    function applyTheme() {
+      if (currentTheme === "light") {
+        appRoot.classList.add("light");
+      } else {
+        appRoot.classList.remove("light");
+      }
+    }
 
-async function handleLogin() {
-  const pwd = passwordInput.value.trim();
-  if (!pwd) {
-    loginError.textContent = "Inserisci una password.";
-    return;
-  }
-
-  const hash = await sha256(pwd);
-  console.log("DEBUG → hash inserito:", hash);
-
-  console.log("DEBUG → confronto:", hash, "vs", passwordHashFromDb);
-
-  if (!passwordHashFromDb) {
-    await db.ref("datario/passwordHash").set(hash);
-    passwordHashFromDb = hash;
-    isAuthenticated = true;
-    loginOverlay.style.display = "none";
-    currentUserLabel.textContent = "Accesso con password impostata";
-    initAfterLogin();
-    return;
-  }
-
-  if (hash === passwordHashFromDb) {
-    isAuthenticated = true;
-    loginOverlay.style.display = "none";
-    currentUserLabel.textContent = "Accesso autorizzato";
-    initAfterLogin();
-  } else {
-    loginError.textContent = "Password errata.";
-  }
-}
-
-  document.getElementById("loginBtn").addEventListener("click", handleLogin);
-  passwordInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") handleLogin();
-  });
-
-// Carica l'hash DOPO che tutte le funzioni sono state definite
-loadPasswordHash();
-
-  /* =========================
-     CALENDARIO
-     ========================= */
-
-  const dayNames = ["L", "M", "M", "G", "V", "S", "D"];
-
-  function buildCalendar() {
-    calendarGrid.innerHTML = "";
-
-    dayNames.forEach(d => {
-      const div = document.createElement("div");
-      div.textContent = d;
-      div.className = "calendar-day-name";
-      calendarGrid.appendChild(div);
+    document.getElementById("themeToggleBtn").addEventListener("click", () => {
+      currentTheme = currentTheme === "dark" ? "light" : "dark";
+      localStorage.setItem("datarioTheme", currentTheme);
+      applyTheme();
     });
 
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
+    applyTheme();
 
-    const firstDay = new Date(year, month, 1);
-    const startDay = (firstDay.getDay() + 6) % 7; // Lunedì=0
+    /* =========================
+       LOGIN / PASSWORD
+       ========================= */
+    async function loadPasswordHash() {
+      const snap = await db.ref("datario/passwordHash").once("value");
+      passwordHashFromDb = snap.val() || null;
+      console.log("DEBUG → passwordHashFromDb:", passwordHashFromDb);
+    }
 
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const daysInPrevMonth = new Date(year, month, 0).getDate();
+    async function handleLogin() {
+      const pwd = passwordInput.value.trim();
+      if (!pwd) {
+        loginError.textContent = "Inserisci una password.";
+        return;
+      }
 
-    const totalCells = 42; // 6 settimane
+      const hash = await sha256(pwd);
+      console.log("DEBUG → hash inserito:", hash);
+      console.log("DEBUG → confronto:", hash, "vs", passwordHashFromDb);
 
-    const todayKey = formatDateKey(new Date());
-    const selectedKey = formatDateKey(selectedDate);
+      if (!passwordHashFromDb) {
+        await db.ref("datario/passwordHash").set(hash);
+        passwordHashFromDb = hash;
+        isAuthenticated = true;
+        loginOverlay.style.display = "none";
+        currentUserLabel.textContent = "Accesso con password impostata";
+        initAfterLogin();
+        return;
+      }
 
-    for (let i = 0; i < totalCells; i++) {
-      const cell = document.createElement("div");
-      cell.className = "calendar-cell";
-
-      let dayNum;
-      let cellDate;
-      if (i < startDay) {
-        dayNum = daysInPrevMonth - (startDay - 1 - i);
-        cell.classList.add("other-month");
-        cellDate = new Date(year, month - 1, dayNum);
-      } else if (i >= startDay + daysInMonth) {
-        dayNum = i - (startDay + daysInMonth) + 1;
-        cell.classList.add("other-month");
-        cellDate = new Date(year, month + 1, dayNum);
+      if (hash === passwordHashFromDb) {
+        isAuthenticated = true;
+        loginOverlay.style.display = "none";
+        currentUserLabel.textContent = "Accesso autorizzato";
+        initAfterLogin();
       } else {
-        dayNum = i - startDay + 1;
-        cellDate = new Date(year, month, dayNum);
+        loginError.textContent = "Password errata.";
       }
+    }
 
-      const cellKey = formatDateKey(cellDate);
-      cell.textContent = dayNum;
+    document.getElementById("loginBtn").addEventListener("click", handleLogin);
+    passwordInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") handleLogin();
+    });
 
-      if (cellKey === todayKey) {
-        cell.classList.add("today");
-      }
-      if (cellKey === selectedKey) {
-        cell.classList.add("selected");
-      }
+    /* =========================
+       CALENDARIO
+       ========================= */
+    const dayNames = ["L", "M", "M", "G", "V", "S", "D"];
 
-      cell.addEventListener("click", () => {
-        selectedDate = cellDate;
-        updateEditorDateLabel();
-        loadEntryForSelectedDate();
-        buildCalendar();
+    function buildCalendar() {
+      calendarGrid.innerHTML = "";
+      dayNames.forEach(d => {
+        const div = document.createElement("div");
+        div.textContent = d;
+        div.className = "calendar-day-name";
+        calendarGrid.appendChild(div);
       });
 
-      calendarGrid.appendChild(cell);
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+      const firstDay = new Date(year, month, 1);
+      const startDay = (firstDay.getDay() + 6) % 7; // Lunedì=0
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const daysInPrevMonth = new Date(year, month, 0).getDate();
+      const totalCells = 42; // 6 settimane
+
+      const todayKey = formatDateKey(new Date());
+      const selectedKey = formatDateKey(selectedDate);
+
+      for (let i = 0; i < totalCells; i++) {
+        const cell = document.createElement("div");
+        cell.className = "calendar-cell";
+
+        let dayNum;
+        let cellDate;
+
+        if (i < startDay) {
+          dayNum = daysInPrevMonth - (startDay - 1 - i);
+          cell.classList.add("other-month");
+          cellDate = new Date(year, month - 1, dayNum);
+        } else if (i >= startDay + daysInMonth) {
+          dayNum = i - (startDay + daysInMonth) + 1;
+          cell.classList.add("other-month");
+          cellDate = new Date(year, month + 1, dayNum);
+        } else {
+          dayNum = i - startDay + 1;
+          cellDate = new Date(year, month, dayNum);
+        }
+
+        const cellKey = formatDateKey(cellDate);
+        cell.textContent = dayNum;
+
+        if (cellKey === todayKey) {
+          cell.classList.add("today");
+        }
+        if (cellKey === selectedKey) {
+          cell.classList.add("selected");
+        }
+
+        cell.addEventListener("click", () => {
+          selectedDate = cellDate;
+          updateEditorDateLabel();
+          loadEntryForSelectedDate();
+          buildCalendar();
+        });
+
+        calendarGrid.appendChild(cell);
+      }
+
+      monthLabel.textContent = currentDate.toLocaleDateString("it-IT", {
+        month: "long",
+        year: "numeric"
+      });
     }
 
-    monthLabel.textContent = currentDate.toLocaleDateString("it-IT", {
-      month: "long",
-      year: "numeric"
+    document.getElementById("prevMonthBtn").addEventListener("click", () => {
+      currentDate.setMonth(currentDate.getMonth() - 1);
+      buildCalendar();
     });
-  }
 
-  document.getElementById("prevMonthBtn").addEventListener("click", () => {
-    currentDate.setMonth(currentDate.getMonth() - 1);
-    buildCalendar();
-  });
+    document.getElementById("nextMonthBtn").addEventListener("click", () => {
+      currentDate.setMonth(currentDate.getMonth() + 1);
+      buildCalendar();
+    });
 
-  document.getElementById("nextMonthBtn").addEventListener("click", () => {
-    currentDate.setMonth(currentDate.getMonth() + 1);
-    buildCalendar();
-  });
+    document.getElementById("todayBtn").addEventListener("click", () => {
+      const now = new Date();
+      currentDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      selectedDate = now;
+      updateEditorDateLabel();
+      loadEntryForSelectedDate();
+      buildCalendar();
+    });
 
-  document.getElementById("todayBtn").addEventListener("click", () => {
-    const now = new Date();
-    currentDate = new Date(now.getFullYear(), now.getMonth(), 1);
-    selectedDate = now;
-    updateEditorDateLabel();
-    loadEntryForSelectedDate();
-    buildCalendar();
-  });
+    document.getElementById("gotoDateBtn").addEventListener("click", () => {
+      const input = prompt("Inserisci una data (YYYY-MM-DD):");
+      if (!input) return;
+      const parts = input.split("-");
+      if (parts.length !== 3) return;
+      const y = parseInt(parts[0], 10);
+      const m = parseInt(parts[1], 10) - 1;
+      const d = parseInt(parts[2], 10);
+      const dt = new Date(y, m, d);
+      if (isNaN(dt.getTime())) return;
+      selectedDate = dt;
+      currentDate = new Date(y, m, 1);
+      updateEditorDateLabel();
+      loadEntryForSelectedDate();
+      buildCalendar();
+    });
 
-  document.getElementById("gotoDateBtn").addEventListener("click", () => {
-    const input = prompt("Inserisci una data (YYYY-MM-DD):");
-    if (!input) return;
-    const parts = input.split("-");
-    if (parts.length !== 3) return;
-    const y = parseInt(parts[0], 10);
-    const m = parseInt(parts[1], 10) - 1;
-    const d = parseInt(parts[2], 10);
-    const dt = new Date(y, m, d);
-    if (isNaN(dt.getTime())) return;
-    selectedDate = dt;
-    currentDate = new Date(y, m, 1);
-    updateEditorDateLabel();
-    loadEntryForSelectedDate();
-    buildCalendar();
-  });
+    /* =========================
+       EDITOR / AUTOSAVE
+       ========================= */
+    function setStatus(state, text) {
+      statusText.className =
+        state === "saving"
+          ? "status-saving"
+          : state === "saved"
+          ? "status-saved"
+          : "status-idle";
 
-  /* =========================
-     EDITOR / AUTOSAVE
-     ========================= */
+      const label = statusText.querySelector("span:nth-child(2)");
 
-  function setStatus(state, text) {
-    statusText.className = state === "saving" ? "status-saving"
-                        : state === "saved" ? "status-saved"
-                        : "status-idle";
-    const dot = statusText.querySelector(".status-dot");
-    const label = statusText.querySelector("span:nth-child(2)");
-    if (state === "saving") {
-      label.textContent = "Salvataggio in corso...";
-    } else if (state === "saved") {
-      label.textContent = text || "Salvato";
-    } else {
-      label.textContent = text || "In attesa";
+      if (state === "saving") {
+        label.textContent = "Salvataggio in corso...";
+      } else if (state === "saved") {
+        label.textContent = text || "Salvato";
+      } else {
+        label.textContent = text || "In attesa";
+      }
     }
-  }
 
-  function updateLastSaved() {
-    if (!lastSaved) {
-      lastSavedText.textContent = "";
-      return;
+    function updateLastSaved() {
+      if (!lastSaved) {
+        lastSavedText.textContent = "";
+        return;
+      }
+      lastSavedText.textContent =
+        "Ultimo salvataggio: " +
+        lastSaved.toLocaleTimeString("it-IT", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit"
+        });
     }
-    lastSavedText.textContent = "Ultimo salvataggio: " +
-      lastSaved.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-  }
 
-  function updateEditorDateLabel() {
-    editorDateLabel.textContent = formatDateLabel(selectedDate);
-  }
+    function updateEditorDateLabel() {
+      editorDateLabel.textContent = formatDateLabel(selectedDate);
+    }
 
-  function loadEntryForSelectedDate() {
-    const key = formatDateKey(selectedDate);
-    setStatus("idle", "Caricamento...");
-    db.ref("datario/entries/" + key).once("value").then(snap => {
-      const val = snap.val() || "";
-      editor.value = val;
-      setStatus("idle", "Pronto");
-      lastSaved = null;
-      updateLastSaved();
-    });
-  }
+    function loadEntryForSelectedDate() {
+      const key = formatDateKey(selectedDate);
+      setStatus("idle", "Caricamento...");
+      db.ref("datario/entries/" + key)
+        .once("value")
+        .then((snap) => {
+          const val = snap.val() || "";
+          editor.value = val;
+          setStatus("idle", "Pronto");
+          lastSaved = null;
+          updateLastSaved();
+        });
+    }
 
-  function scheduleAutosave() {
-    if (!isAuthenticated) return;
-    if (autosaveTimer) clearTimeout(autosaveTimer);
-    setStatus("idle", "Modifiche non salvate");
-    autosaveTimer = setTimeout(() => {
-      saveEntry();
-    }, 1000);
-  }
+    function scheduleAutosave() {
+      if (!isAuthenticated) return;
+      if (autosaveTimer) clearTimeout(autosaveTimer);
+      setStatus("idle", "Modifiche non salvate");
+      autosaveTimer = setTimeout(() => {
+        saveEntry();
+      }, 1000);
+    }
 
-  function saveEntry() {
-    if (!isAuthenticated) return;
-    const key = formatDateKey(selectedDate);
-    const text = editor.value;
-    isSaving = true;
-    setStatus("saving");
-    db.ref("datario/entries/" + key).set(text).then(() => {
-      isSaving = false;
-      lastSaved = new Date();
-      setStatus("saved");
-      updateLastSaved();
-    }).catch(() => {
-      isSaving = false;
-      setStatus("idle", "Errore di salvataggio");
-    });
-  }
+    function saveEntry() {
+      if (!isAuthenticated) return;
+      const key = formatDateKey(selectedDate);
+      const text = editor.value;
+      isSaving = true;
+      setStatus("saving");
+      db.ref("datario/entries/" + key)
+        .set(text)
+        .then(() => {
+          isSaving = false;
+          lastSaved = new Date();
+          setStatus("saved");
+          updateLastSaved();
+        })
+        .catch(() => {
+          isSaving = false;
+          setStatus("idle", "Errore di salvataggio");
+        });
+    }
 
-  editor.addEventListener("input", scheduleAutosave);
+    editor.addEventListener("input", scheduleAutosave);
 
-  /* =========================
-     INIZIALIZZAZIONE
-     ========================= */
+    /* =========================
+       INIZIALIZZAZIONE
+       ========================= */
+    async function initAfterLogin() {
+      updateEditorDateLabel();
+      buildCalendar();
+      loadEntryForSelectedDate();
+    }
 
-  async function initAfterLogin() {
-    updateEditorDateLabel();
-    buildCalendar();
-    loadEntryForSelectedDate();
-  }
-
-  (async function init() {
-    await loadPasswordHash();
-    // Mostro overlay login finché non autenticato
-    loginOverlay.style.display = "flex";
-  })();
-</script>
+    (async function init() {
+      await loadPasswordHash();
+      // Mostro overlay login finché non autenticato
+      loginOverlay.style.display = "flex";
+    })();
+  </script>
 </body>
 </html>
