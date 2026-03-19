@@ -340,11 +340,7 @@
 </div>
 
 </div>
-
-<!-- Firebase v8 compat (funziona in HTML locale) -->
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
+  
 <script>
   /* =========================
        CONFIGURAZIONE FIREBASE
@@ -359,8 +355,8 @@
     appId: "1:952135648992:web:f6369d0db7f75d55373285"
   };
 
-  // Inizializzazione Firebase (v8 compat)
-  firebase.initializeApp(firebaseConfig);
+  // Inizializzazione Firebase (v9 compat)
+  const app = firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
   
 </script>
