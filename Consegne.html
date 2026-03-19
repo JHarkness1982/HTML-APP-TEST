@@ -361,8 +361,7 @@
   // Inizializzazione Firebase (v8 compat)
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
-   // 🔥 Carica l'hash all'avvio
-  loadPasswordHash();
+  
 </script>
 
   /* =========================
@@ -485,6 +484,9 @@ async function handleLogin() {
   passwordInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") handleLogin();
   });
+
+// Carica l'hash DOPO che tutte le funzioni sono state definite
+loadPasswordHash();
 
   /* =========================
      CALENDARIO
